@@ -1,0 +1,77 @@
+[gd_scene load_steps=11 format=3 uid="uid://25xg0dhh0rlo"]
+
+[ext_resource type="Texture2D" uid="uid://crmh41xwtc28w" path="res://Sprites/SideOverlay.png" id="1_euyp0"]
+[ext_resource type="AudioStream" uid="uid://bdynqwryombs3" path="res://Music/MusicBackground.ogg" id="1_tb0x3"]
+[ext_resource type="Texture2D" uid="uid://bn61jyjkk53es" path="res://Textures/Skybox.png" id="3_6t2su"]
+[ext_resource type="Script" path="res://Scripts/Camera.gd" id="4_miab8"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_nv46y"]
+panorama = ExtResource("3_6t2su")
+
+[sub_resource type="Sky" id="Sky_ic4d5"]
+sky_material = SubResource("PanoramaSkyMaterial_nv46y")
+
+[sub_resource type="Environment" id="Environment_oltcs"]
+background_mode = 2
+sky = SubResource("Sky_ic4d5")
+
+[sub_resource type="Shader" id="Shader_416wr"]
+code = "shader_type spatial;
+
+void fragment() {
+    // Calculate the UV coordinates
+    vec2 uv = FRAGCOORD.xy / vec2(SCREEN_SIZE.x, SCREEN_SIZE.y);
+    
+    // Offset UV to create the plane
+    uv -= vec2(0.5);
+    
+    // Output color
+    vec3 color = vec3(0.8, 0.8, 0.8);
+    ALBEDO = vec3(color);
+}
+
+void vertex() {
+    // Pass vertex position to fragment shader
+    VERTEX = vec4(VERTEX.x, VERTEX.y, 0.0, 1.0);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vw7b3"]
+render_priority = 0
+shader = SubResource("Shader_416wr")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_yevyt"]
+
+[node name="RootScene" type="Node3D"]
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("1_tb0x3")
+autoplay = true
+mix_target = 1
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+follow_viewport_enabled = true
+
+[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer"]
+texture_filter = 1
+texture_repeat = 1
+position = Vector2(1772, 540)
+texture = ExtResource("1_euyp0")
+
+[node name="Day" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_oltcs")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -0.866025, 0.5, 0, -0.5, -0.866025, 0, 1.84186, 0)
+shadow_enabled = true
+
+[node name="Plane" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0259893, 0.00949192, -0.0201063)
+material_override = SubResource("ShaderMaterial_vw7b3")
+material_overlay = SubResource("ShaderMaterial_vw7b3")
+mesh = SubResource("PlaneMesh_yevyt")
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29234, 2.65399)
+doppler_tracking = 2
+script = ExtResource("4_miab8")
